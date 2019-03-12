@@ -20,4 +20,11 @@ class ModelTests {
         Assert.assertNotEquals(dataString.length, 0)
         Assert.assertEquals(dataString.indexOf("\n"), -1)
     }
+
+    @Test
+    fun testGetValidCharacters() {
+        val validChars = model.getValidChars()
+
+        Assert.assertNotEquals(validChars.length, 0)
+    }
 }

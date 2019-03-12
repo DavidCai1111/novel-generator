@@ -18,10 +18,27 @@ class Model {
     }
 
     fun getDataString(): String {
-        var input = IOUtils.toString(FileInputStream("./src/main/resources/data/besieged-city.txt"), "UTF-8")
-
-        input = input.replace("\n", "")
-
-        return input
+        return DataSetInfo("./src/main/resources/data/besieged-city.txt").dataString
     }
+
+    fun getValidChars(): String {
+        return DataSetInfo("./src/main/resources/data/besieged-city.txt").validCharacters
+    }
+}
+
+data class DataSetInfo(val filePath: String) {
+    val dataString = IOUtils.toString(FileInputStream(filePath), "UTF-8").replace("\n", "")
+
+    val validCharacters: String
+        get() {
+            var validCharacters = ""
+
+            for (character in dataString) {
+                if (validCharacters.indexOf(character) < 0) {
+                    validCharacters += character
+                }
+            }
+
+            return validCharacters
+        }
 }

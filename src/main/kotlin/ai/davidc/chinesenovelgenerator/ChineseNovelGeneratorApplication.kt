@@ -11,8 +11,8 @@ class ChineseNovelGeneratorApplication(val model: Model) : CommandLineRunner {
     
     override fun run(vararg args: String?) {
         model.generate()
-        logger.info(model.getDataString())
-        logger.info(model.getDataString().length.toString())
+
+        logger.info(model.dataSetInfo.toString())
     }
 }
 

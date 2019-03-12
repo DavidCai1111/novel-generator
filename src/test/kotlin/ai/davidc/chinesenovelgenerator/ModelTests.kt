@@ -15,7 +15,7 @@ class ModelTests {
 
     @Test
     fun testGetDataString() {
-        val dataString = model.getDataString()
+        val dataString = model.dataSetInfo.dataString
 
         Assert.assertNotEquals(dataString.length, 0)
         Assert.assertEquals(dataString.indexOf("\n"), -1)
@@ -23,7 +23,7 @@ class ModelTests {
 
     @Test
     fun testGetValidCharacters() {
-        val validChars = model.getValidChars()
+        val validChars = model.dataSetInfo.validCharacters
 
         Assert.assertNotEquals(validChars.length, 0)
     }

@@ -18,7 +18,6 @@ class ModelTests {
         val dataString = model.dataSetInfo.dataString
 
         Assert.assertNotEquals(dataString.length, 0)
-        Assert.assertEquals(dataString.indexOf("\n"), -1)
     }
 
     @Test

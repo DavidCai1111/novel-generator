@@ -12,6 +12,7 @@ import org.deeplearning4j.optimize.listeners.ScoreIterationListener
 import org.nd4j.linalg.activations.Activation
 import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.springframework.stereotype.Component
+import java.io.File
 
 const val VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\\n',.?;()[]{}:!-"
 
@@ -62,7 +63,11 @@ class Model {
     fun train(txtPath: String) {
         val dataSetInfo = DataSetInfo(txtPath)
 
-        model.addListeners(ScoreIterationListener(5))
+        logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
+        logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
+
+        model.addListeners(ScoreIterationListener(100))
         model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
+        model.save(File("./src/main/resources/model"))
     }
 }

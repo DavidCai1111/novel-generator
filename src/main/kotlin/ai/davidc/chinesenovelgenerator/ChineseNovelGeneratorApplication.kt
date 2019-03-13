@@ -10,7 +10,9 @@ class ChineseNovelGeneratorApplication(val model: Model) : CommandLineRunner {
     private val logger = LogFactory.getLog(ChineseNovelGeneratorApplication::class.java)
     
     override fun run(vararg args: String?) {
-//        model.train("./src/main/resources/data/tinyshakespeare.txt")
+        model.load()
+
+        logger.info("Generated novel: ${model.generate("I", 200)}")
     }
 }
 

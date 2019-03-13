@@ -1,58 +1,68 @@
 package ai.davidc.chinesenovelgenerator
 
 import org.apache.commons.logging.LogFactory
-import org.deeplearning4j.zoo.model.TextGenerationLSTM
-import org.nd4j.linalg.api.ndarray.INDArray
-import org.nd4j.linalg.factory.Nd4j
-import org.nd4j.linalg.learning.config.Adam
+import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.*
+import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
+import org.deeplearning4j.nn.conf.layers.GravesLSTM
+import org.deeplearning4j.nn.conf.layers.RnnOutputLayer
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
+import org.deeplearning4j.nn.weights.WeightInit
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener
+import org.nd4j.linalg.activations.Activation
+import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.springframework.stereotype.Component
+
+const val VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\\n',.?;()[]{}:!-"
 
 @Component
 class Model {
     private val logger = LogFactory.getLog(Model::class.java)
-    val dataSetInfo = DataSet("./src/main/resources/data/tinyshakespeare.txt")
 
-    private val model = TextGenerationLSTM
-            .builder()
-            .inputShape(intArrayOf(1, dataSetInfo.validCharacters.length))
-            .totalUniqueCharacters(dataSetInfo.validCharacters.length)
-            .updater(Adam())
-            .build()
+    private val model: MultiLayerNetwork = MultiLayerNetwork(NeuralNetConfiguration
+            .Builder()
+            .seed(12345)
+            .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+            .l2(0.001)
+            .weightInit(WeightInit.XAVIER)
+            .cacheMode(CacheMode.NONE)
+            .updater(Updater.RMSPROP)
+            .trainingWorkspaceMode(WorkspaceMode.ENABLED)
+            .inferenceWorkspaceMode(WorkspaceMode.ENABLED)
+            .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
+            .list()
+            .layer(0, GravesLSTM
+                    .Builder()
+                    .nIn(VALID_CHARACTERS.length)
+                    .nOut(256)
+                    .activation(Activation.TANH)
+                    .build()
+            )
+            .layer(1, GravesLSTM
+                    .Builder()
+                    .nOut(256)
+                    .activation(Activation.TANH)
+                    .build()
+            )
+            .layer(2, RnnOutputLayer
+                    .Builder(LossFunctions.LossFunction.MCXENT)
+                    .activation(Activation.SOFTMAX)
+                    .nOut(VALID_CHARACTERS.length)
+                    .build()
+            )
+            .backpropType(BackpropType.TruncatedBPTT)
+            .tBPTTForwardLength(50)
+            .tBPTTBackwardLength(50)
+            .build())
 
-    private var inputArrayCache: INDArray? = null
-    private var labelArrayCache: INDArray? = null
+    init {
+        model.init()
+    }
 
-    val inputArray: INDArray
-        get() {
-            if (inputArrayCache != null) {
-                return inputArrayCache!!
-            }
+    fun train(txtPath: String) {
+        val dataSetInfo = DataSetInfo(txtPath)
 
-            inputArrayCache = Nd4j.zeros(1, dataSetInfo.validCharacters.length, dataSetInfo.dataString.length)
-
-            for (i in 0..(dataSetInfo.dataString.length - 2)) {
-                inputArrayCache!!.putScalar(intArrayOf(0, dataSetInfo.validCharacters.indexOf(dataSetInfo.dataString[i]), i), 1)
-            }
-
-            return inputArrayCache!!
-        }
-
-    val labelArray: INDArray
-        get() {
-            if (labelArrayCache != null) {
-                return labelArrayCache!!
-            }
-
-            labelArrayCache = Nd4j.zeros(1, dataSetInfo.validCharacters.length, dataSetInfo.dataString.length)
-
-            for (i in 0..(dataSetInfo.dataString.length - 2)) {
-                labelArrayCache!!.putScalar(intArrayOf(0, dataSetInfo.validCharacters.indexOf(dataSetInfo.dataString[i + 1]), i), 1)
-            }
-
-            return labelArrayCache!!
-        }
-
-    fun generate() {
-        logger.info(model.toString())
+        model.addListeners(ScoreIterationListener(5))
+        model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
     }
 }

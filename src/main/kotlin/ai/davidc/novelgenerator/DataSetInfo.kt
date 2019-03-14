@@ -1,4 +1,4 @@
-package ai.davidc.chinesenovelgenerator
+package ai.davidc.novelgenerator
 
 import org.apache.commons.io.IOUtils
 import org.nd4j.linalg.api.ndarray.INDArray

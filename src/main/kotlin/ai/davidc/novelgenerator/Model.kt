@@ -1,4 +1,4 @@
-package ai.davidc.chinesenovelgenerator
+package ai.davidc.novelgenerator
 
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
@@ -63,6 +63,7 @@ class Model {
         model.addListeners(ScoreIterationListener(1))
 
         for (i in 0..epoch) {
+            logger.info("epoch: $i")
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
         }
 

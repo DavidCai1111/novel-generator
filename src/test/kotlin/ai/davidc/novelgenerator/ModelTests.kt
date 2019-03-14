@@ -1,4 +1,4 @@
-package ai.davidc.chinesenovelgenerator
+package ai.davidc.novelgenerator
 
 import org.junit.Assert
 import org.junit.Test

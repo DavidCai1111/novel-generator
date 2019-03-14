@@ -9,7 +9,7 @@ import org.springframework.test.context.junit4.SpringRunner
 @RunWith(SpringRunner::class)
 @SpringBootTest
 class ModelTests {
-    val dataSetInfo = DataSetInfo("./src/main/resources/data/tinyshakespeare.txt")
+    val dataSetInfo = DataSetInfo("./src/main/resources/data/data.txt")
 
     @Test
     fun testDataString() {

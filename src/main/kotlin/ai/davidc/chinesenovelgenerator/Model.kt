@@ -2,8 +2,8 @@ package ai.davidc.chinesenovelgenerator
 
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
-import org.deeplearning4j.nn.conf.*
-import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
+import org.deeplearning4j.nn.conf.NeuralNetConfiguration
+import org.deeplearning4j.nn.conf.Updater
 import org.deeplearning4j.nn.conf.layers.GravesLSTM
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
@@ -28,11 +28,7 @@ class Model {
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
             .l2(0.001)
             .weightInit(WeightInit.XAVIER)
-            .cacheMode(CacheMode.NONE)
-            .updater(Updater.RMSPROP)
-            .trainingWorkspaceMode(WorkspaceMode.ENABLED)
-            .inferenceWorkspaceMode(WorkspaceMode.ENABLED)
-            .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
+            .updater(Updater.ADAM)
             .list()
             .layer(0, GravesLSTM
                     .Builder()
@@ -48,14 +44,13 @@ class Model {
                     .build()
             )
             .layer(2, RnnOutputLayer
-                    .Builder(LossFunctions.LossFunction.MCXENT)
+                    .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(VALID_CHARACTERS.length)
                     .build()
             )
-            .backpropType(BackpropType.TruncatedBPTT)
-            .tBPTTForwardLength(50)
-            .tBPTTBackwardLength(50)
+            .backprop(true)
+            .pretrain(false)
             .build())
 
     private val modelFile = File("./src/main/resources/model")
@@ -64,14 +59,18 @@ class Model {
         model.init()
     }
 
-    fun train(txtPath: String) {
+    fun train(txtPath: String, epoch: Int = 1) {
         val dataSetInfo = DataSetInfo(txtPath)
 
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
-        model.addListeners(ScoreIterationListener(100))
-        model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
+        model.addListeners(ScoreIterationListener(1))
+
+        for (i in 0..epoch) {
+            model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
+        }
+
         model.save(modelFile)
     }
 

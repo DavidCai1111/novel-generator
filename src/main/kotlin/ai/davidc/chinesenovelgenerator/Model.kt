@@ -26,6 +26,7 @@ class Model {
             .Builder()
             .seed(12345)
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
+            .miniBatch(true)
             .l2(0.001)
             .weightInit(WeightInit.XAVIER)
             .updater(Updater.ADAM)

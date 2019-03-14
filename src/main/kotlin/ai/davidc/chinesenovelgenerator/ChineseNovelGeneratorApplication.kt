@@ -11,8 +11,8 @@ class ChineseNovelGeneratorApplication(val model: Model) : CommandLineRunner {
     
     override fun run(vararg args: String?) {
         model.load()
-//        model.train("./src/main/resources/data/data.txt", 60)
-        logger.info("Generated novel: ${model.generate("I", 200)}")
+//        model.train("./src/main/resources/data/data.txt", 1000)
+        logger.info("Generated novel: ${model.generate("A", 200)}")
     }
 }
 

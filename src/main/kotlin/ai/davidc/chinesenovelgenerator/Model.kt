@@ -33,17 +33,11 @@ class Model {
             .layer(0, GravesLSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
-                    .nOut(256)
+                    .nOut(30)
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, GravesLSTM
-                    .Builder()
-                    .nOut(256)
-                    .activation(Activation.TANH)
-                    .build()
-            )
-            .layer(2, RnnOutputLayer
+            .layer(1, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(VALID_CHARACTERS.length)

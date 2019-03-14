@@ -5,6 +5,7 @@ import org.deeplearning4j.nn.api.OptimizationAlgorithm
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
 import org.deeplearning4j.nn.conf.layers.GravesLSTM
+import org.deeplearning4j.nn.conf.layers.LSTM
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
 import org.deeplearning4j.nn.weights.WeightInit
@@ -16,7 +17,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.springframework.stereotype.Component
 import java.io.File
 
-const val VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\\n',.?;()[]{}:!-"
+const val VALID_CHARACTERS = """ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\\n',.?;()[]{}:!- """
 
 @Component
 class Model {
@@ -31,7 +32,7 @@ class Model {
             .weightInit(WeightInit.XAVIER)
             .updater(Updater.ADAM)
             .list()
-            .layer(0, GravesLSTM
+            .layer(0, LSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
                     .nOut(30)
@@ -63,7 +64,6 @@ class Model {
         model.addListeners(ScoreIterationListener(1))
 
         for (i in 0..epoch) {
-            logger.info("epoch: $i")
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
         }
 
@@ -80,7 +80,7 @@ class Model {
 
         model.rnnClearPreviousState()
 
-        var output = ""
+        var output = "a"
 
         for (i in 0..(length - 1)) {
             val outputArray = model.rnnTimeStep(inputArray)

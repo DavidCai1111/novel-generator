@@ -26,22 +26,28 @@ class Model {
 
     private var model: MultiLayerNetwork = MultiLayerNetwork(NeuralNetConfiguration
             .Builder()
-            .seed(12345)
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-            .l2(0.001)
             .weightInit(WeightInit.XAVIER)
             .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
+            .miniBatch(true)
             .updater(Adam())
             .list()
             .layer(0, LSTM
                     .Builder()
                     .nIn(dataSetInfo.validCharacters.length)
-                    .nOut(30)
+                    .nOut(256)
                     .dropOut(Dropout(0.2))
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, RnnOutputLayer
+            .layer(1, LSTM
+                    .Builder()
+                    .nOut(256)
+                    .dropOut(Dropout(0.2))
+                    .activation(Activation.TANH)
+                    .build()
+            )
+            .layer(2, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(dataSetInfo.validCharacters.length)
@@ -58,15 +64,17 @@ class Model {
     }
 
     fun train(epoch: Int = 1) {
+        logger.info("Valid characters: ${dataSetInfo.validCharacters}")
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
         model.setListeners(ScoreIterationListener(10))
         for (i in 0..epoch) {
+            model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
+
             if (i % 50 == 0) {
                 logger.info(generate("A", 200))
             }
-            model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
         }
 
         model.save(modelFile)
@@ -78,11 +86,11 @@ class Model {
 
     fun generate(firstCharacter: String, length: Int): String {
         var inputArray = Nd4j.zeros(dataSetInfo.validCharacters.length)
-        inputArray.putScalar(0, 1)
+        inputArray.putScalar(0, dataSetInfo.validCharacters.indexOf(firstCharacter))
 
         model.rnnClearPreviousState()
 
-        var output = "A"
+        var output = firstCharacter
 
         for (i in 0..(length - 1)) {
             val outputArray = model.rnnTimeStep(inputArray)

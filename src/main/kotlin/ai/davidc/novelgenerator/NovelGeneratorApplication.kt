@@ -11,8 +11,8 @@ class NovelGeneratorApplication(val model: Model) : CommandLineRunner {
     
     override fun run(vararg args: String?) {
 //        model.load()
-        model.train(2000)
-//        logger.info("Generated novel: ${model.generate("A", 200)}")
+        model.train(5000)
+//        logger.info("Generated novel: ${model.generate("I", 500)}")
     }
 }
 

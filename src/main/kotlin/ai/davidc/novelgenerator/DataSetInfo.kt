@@ -7,7 +7,7 @@ import java.io.FileInputStream
 
 
 data class DataSetInfo(val filePath: String) {
-    val dataString = IOUtils.toString(FileInputStream(filePath), "UTF-8").toString().substring(0, 10000)
+    val dataString = IOUtils.toString(FileInputStream(filePath), "UTF-8").toString().substring(0, 50000)
     var inputArray: INDArray
     var labelArray: INDArray
     var validCharacters = ""

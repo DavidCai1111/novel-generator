@@ -35,7 +35,14 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
-                    .nOut(30)
+                    .nOut(128)
+                    .activation(Activation.TANH)
+                    .build()
+            )
+            .layer(0, LSTM
+                    .Builder()
+                    .nIn(VALID_CHARACTERS.length)
+                    .nOut(128)
                     .activation(Activation.TANH)
                     .build()
             )

@@ -34,11 +34,18 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
-                    .nOut(30)
+                    .nOut(128)
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, RnnOutputLayer
+            .layer(1, LSTM
+                    .Builder()
+                    .nIn(VALID_CHARACTERS.length)
+                    .nOut(128)
+                    .activation(Activation.TANH)
+                    .build()
+            )
+            .layer(2, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(VALID_CHARACTERS.length)
@@ -60,10 +67,10 @@ class Model {
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
-        model.addListeners(ScoreIterationListener(100))
+        model.addListeners(ScoreIterationListener(10))
 
         for (i in 0..epoch) {
-            if (epoch % 500 === 0) {
+            if (i % 100 == 0) {
                 logger.info(generate("a", 200))
             }
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)

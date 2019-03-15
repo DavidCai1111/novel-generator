@@ -4,7 +4,6 @@ import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
 import org.deeplearning4j.nn.conf.BackpropType
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
-import org.deeplearning4j.nn.conf.Updater
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
 import org.deeplearning4j.nn.conf.layers.LSTM
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer
@@ -13,6 +12,7 @@ import org.deeplearning4j.nn.weights.WeightInit
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.activations.Activation
 import org.nd4j.linalg.factory.Nd4j
+import org.nd4j.linalg.learning.config.RmsProp
 import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.springframework.stereotype.Component
 import java.io.File
@@ -30,7 +30,7 @@ class Model {
             .l2(0.001)
             .weightInit(WeightInit.XAVIER)
             .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-            .updater(Updater.ADAM)
+            .updater(RmsProp(0.01))
             .list()
             .layer(0, LSTM
                     .Builder()

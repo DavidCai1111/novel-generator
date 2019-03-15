@@ -3,6 +3,7 @@ package ai.davidc.novelgenerator
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
+import org.deeplearning4j.nn.conf.dropout.Dropout
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
 import org.deeplearning4j.nn.conf.layers.LSTM
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer
@@ -27,6 +28,7 @@ class Model {
 
     private var model: MultiLayerNetwork = MultiLayerNetwork(NeuralNetConfiguration
             .Builder()
+            .seed(12345)
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
             .miniBatch(true)
             .l2(0.001)
@@ -37,11 +39,19 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
-                    .nOut(30)
+                    .nOut(256)
+                    .dropOut(Dropout(0.2))
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, RnnOutputLayer
+            .layer(1, LSTM
+                    .Builder()
+                    .nOut(256)
+                    .dropOut(Dropout(0.2))
+                    .activation(Activation.TANH)
+                    .build()
+            )
+            .layer(2, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(VALID_CHARACTERS.length)
@@ -97,6 +107,10 @@ class Model {
                     maxPrediction = outputArray.getDouble(j)
                     maxPredictionIndex = j
                 }
+            }
+
+            if (maxPredictionIndex == -1) {
+                logger.error("maxPredictionIndex == -1")
             }
 
             output += VALID_CHARACTERS[maxPredictionIndex]

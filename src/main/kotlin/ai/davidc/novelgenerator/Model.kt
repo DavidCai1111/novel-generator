@@ -16,7 +16,7 @@ import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.springframework.stereotype.Component
 import java.io.File
 
-const val VALID_CHARACTERS = """ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\\n',.?;()[]{}:!- """
+const val VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\n',.?;()[]{}:!- "
 
 @Component
 class Model {
@@ -34,18 +34,11 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
-                    .nOut(128)
+                    .nOut(30)
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, LSTM
-                    .Builder()
-                    .nIn(VALID_CHARACTERS.length)
-                    .nOut(128)
-                    .activation(Activation.TANH)
-                    .build()
-            )
-            .layer(2, RnnOutputLayer
+            .layer(1, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(VALID_CHARACTERS.length)
@@ -71,7 +64,7 @@ class Model {
 
         for (i in 0..epoch) {
             if (i % 100 == 0) {
-                logger.info(generate("a", 200))
+                logger.info(generate("A", 200))
             }
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
         }
@@ -89,7 +82,7 @@ class Model {
 
         model.rnnClearPreviousState()
 
-        var output = "a"
+        var output = "A"
 
         for (i in 0..(length - 1)) {
             val outputArray = model.rnnTimeStep(inputArray)

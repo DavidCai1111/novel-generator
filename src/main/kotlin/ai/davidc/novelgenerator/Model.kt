@@ -2,22 +2,22 @@ package ai.davidc.novelgenerator
 
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
-import org.deeplearning4j.nn.conf.BackpropType
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
+import org.deeplearning4j.nn.conf.Updater
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
 import org.deeplearning4j.nn.conf.layers.LSTM
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
 import org.deeplearning4j.nn.weights.WeightInit
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.activations.Activation
 import org.nd4j.linalg.factory.Nd4j
-import org.nd4j.linalg.learning.config.RmsProp
 import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.springframework.stereotype.Component
 import java.io.File
 
-const val VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\n',.?;()[]{}:!-_ "
+const val VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\\\"\n',.?;()[]{}:!- _"
 
 @Component
 class Model {
@@ -30,30 +30,22 @@ class Model {
             .l2(0.001)
             .weightInit(WeightInit.XAVIER)
             .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-            .updater(RmsProp(0.01))
+            .updater(Updater.ADAM)
             .list()
             .layer(0, LSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
-                    .nOut(256)
+                    .nOut(30)
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, LSTM
-                    .Builder()
-                    .nOut(256)
-                    .activation(Activation.TANH)
-                    .build()
-            )
-            .layer(2, RnnOutputLayer
-                    .Builder(LossFunctions.LossFunction.MCXENT)
+            .layer(1, RnnOutputLayer
+                    .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(VALID_CHARACTERS.length)
                     .build()
             )
-            .backpropType(BackpropType.TruncatedBPTT)
-            .tBPTTForwardLength(50)
-            .tBPTTBackwardLength(50)
+            .backprop(true)
             .pretrain(false)
             .build())
 
@@ -69,9 +61,9 @@ class Model {
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
+        model.setListeners(ScoreIterationListener(10))
         for (i in 0..epoch) {
-            logger.info("epoch: $i")
-            if (i % 10 == 0) {
+            if (i % 50 == 0) {
                 logger.info(generate("A", 200))
             }
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)

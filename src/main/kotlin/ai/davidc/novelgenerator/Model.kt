@@ -15,8 +15,6 @@ import org.nd4j.linalg.activations.Activation
 import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.learning.config.Adam
 import org.nd4j.linalg.lossfunctions.LossFunctions
-import org.nd4j.linalg.schedule.ExponentialSchedule
-import org.nd4j.linalg.schedule.ScheduleType
 import org.springframework.stereotype.Component
 import java.io.File
 
@@ -30,28 +28,20 @@ class Model {
             .Builder()
             .seed(12345)
             .optimizationAlgo(OptimizationAlgorithm.STOCHASTIC_GRADIENT_DESCENT)
-            .miniBatch(true)
             .l2(0.001)
             .weightInit(WeightInit.XAVIER)
             .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
-            .updater(Adam(ExponentialSchedule(ScheduleType.ITERATION, 0.01, 0.99)))
+            .updater(Adam())
             .list()
             .layer(0, LSTM
                     .Builder()
                     .nIn(dataSetInfo.validCharacters.length)
-                    .nOut(256)
+                    .nOut(30)
                     .dropOut(Dropout(0.2))
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, LSTM
-                    .Builder()
-                    .nOut(256)
-                    .dropOut(Dropout(0.2))
-                    .activation(Activation.TANH)
-                    .build()
-            )
-            .layer(2, RnnOutputLayer
+            .layer(1, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
                     .nOut(dataSetInfo.validCharacters.length)

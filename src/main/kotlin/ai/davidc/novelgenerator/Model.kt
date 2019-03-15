@@ -20,11 +20,11 @@ import org.nd4j.linalg.schedule.ScheduleType
 import org.springframework.stereotype.Component
 import java.io.File
 
-const val VALID_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\"\n',.?;()[]{}:!- _"
-
 @Component
 class Model {
     private val logger = LogFactory.getLog(Model::class.java)
+
+    val dataSetInfo = DataSetInfo("./src/main/resources/data/data.txt")
 
     private var model: MultiLayerNetwork = MultiLayerNetwork(NeuralNetConfiguration
             .Builder()
@@ -38,7 +38,7 @@ class Model {
             .list()
             .layer(0, LSTM
                     .Builder()
-                    .nIn(VALID_CHARACTERS.length)
+                    .nIn(dataSetInfo.validCharacters.length)
                     .nOut(256)
                     .dropOut(Dropout(0.2))
                     .activation(Activation.TANH)
@@ -54,7 +54,7 @@ class Model {
             .layer(2, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
-                    .nOut(VALID_CHARACTERS.length)
+                    .nOut(dataSetInfo.validCharacters.length)
                     .build()
             )
             .backprop(true)
@@ -67,9 +67,7 @@ class Model {
         model.init()
     }
 
-    fun train(txtPath: String, epoch: Int = 1) {
-        val dataSetInfo = DataSetInfo(txtPath)
-
+    fun train(epoch: Int = 1) {
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
@@ -89,7 +87,7 @@ class Model {
     }
 
     fun generate(firstCharacter: String, length: Int): String {
-        var inputArray = Nd4j.zeros(VALID_CHARACTERS.length)
+        var inputArray = Nd4j.zeros(dataSetInfo.validCharacters.length)
         inputArray.putScalar(0, 1)
 
         model.rnnClearPreviousState()
@@ -102,7 +100,7 @@ class Model {
             var maxPrediction = Double.MIN_VALUE
             var maxPredictionIndex = -1
 
-            for (j in 0..(VALID_CHARACTERS.length - 1)) {
+            for (j in 0..(dataSetInfo.validCharacters.length - 1)) {
                 if (maxPrediction < outputArray.getDouble(j)) {
                     maxPrediction = outputArray.getDouble(j)
                     maxPredictionIndex = j
@@ -113,9 +111,9 @@ class Model {
                 logger.error("maxPredictionIndex == -1")
             }
 
-            output += VALID_CHARACTERS[maxPredictionIndex]
+            output += dataSetInfo.validCharacters[maxPredictionIndex]
 
-            inputArray = Nd4j.zeros(VALID_CHARACTERS.length)
+            inputArray = Nd4j.zeros(dataSetInfo.validCharacters.length)
             inputArray.putScalar(maxPredictionIndex.toLong(), 1)
         }
 

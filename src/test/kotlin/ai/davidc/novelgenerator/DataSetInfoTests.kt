@@ -21,7 +21,7 @@ class DataSetInfoTests {
         val indexes = IntArray(dataSetInfo.dataString.length)
 
         for (i in 0..(dataSetInfo.dataString.length - 1)) {
-            indexes[i] = VALID_CHARACTERS.indexOf(dataSetInfo.dataString[i])
+            indexes[i] = dataSetInfo.validCharacters.indexOf(dataSetInfo.dataString[i])
         }
 
         for (i in indexes) {

@@ -4,7 +4,6 @@ import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
-import org.deeplearning4j.nn.conf.layers.GravesLSTM
 import org.deeplearning4j.nn.conf.layers.LSTM
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork
@@ -35,14 +34,7 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(VALID_CHARACTERS.length)
-                    .nOut(128)
-                    .activation(Activation.TANH)
-                    .build()
-            )
-            .layer(0, LSTM
-                    .Builder()
-                    .nIn(VALID_CHARACTERS.length)
-                    .nOut(128)
+                    .nOut(30)
                     .activation(Activation.TANH)
                     .build()
             )
@@ -68,9 +60,12 @@ class Model {
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
-        model.addListeners(ScoreIterationListener(1))
+        model.addListeners(ScoreIterationListener(100))
 
         for (i in 0..epoch) {
+            if (epoch % 500 === 0) {
+                logger.info(generate("a", 200))
+            }
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
         }
 

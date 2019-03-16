@@ -22,8 +22,7 @@ dependencies {
 
     compile "org.deeplearning4j:deeplearning4j-core:1.0.0-beta3"
     compile "org.deeplearning4j:deeplearning4j-zoo:1.0.0-beta3"
-    compile "org.deeplearning4j:deeplearning4j-cuda-9.0:1.0.0-beta3"
-    compile "org.nd4j:nd4j-cuda-9.0-platform:1.0.0-beta3"
+    compile "org.nd4j:nd4j-native-platform:1.0.0-beta3"
 }
 
 compileKotlin {

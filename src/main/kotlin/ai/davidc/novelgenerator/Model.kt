@@ -2,6 +2,7 @@ package ai.davidc.novelgenerator
 
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.BackpropType
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.dropout.Dropout
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
@@ -30,6 +31,7 @@ class Model {
             .weightInit(WeightInit.XAVIER)
             .cudnnAlgoMode(ConvolutionLayer.AlgoMode.PREFER_FASTEST)
             .miniBatch(true)
+            .l2(0.001)
             .updater(Adam())
             .list()
             .layer(0, LSTM
@@ -48,14 +50,16 @@ class Model {
                     .build()
             )
             .layer(2, RnnOutputLayer
-                    .Builder(LossFunctions.LossFunction.MSE)
+                    .Builder(LossFunctions.LossFunction.MCXENT)
                     .activation(Activation.SOFTMAX)
                     .nOut(dataSetInfo.validCharacters.length)
                     .build()
             )
-            .backprop(true)
-            .pretrain(false)
-            .build())
+            .backpropType(BackpropType.TruncatedBPTT)
+            .tBPTTForwardLength(50)
+            .tBPTTBackwardLength(50)
+            .build()
+    )
 
     private val modelFile = File("./src/main/resources/model")
 
@@ -68,8 +72,11 @@ class Model {
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
-        model.setListeners(ScoreIterationListener(10))
+        model.setListeners(ScoreIterationListener(5000))
+
         for (i in 0..epoch) {
+            logger.info("epoch: $i")
+
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
 
             if (i % 50 == 0) {

@@ -15,4 +15,4 @@ terase an itho stare als the ceedner, heo uhe pee hithice fone
 ollikk oad sor int can orleoan.
 ```
 
-> If you want to get more meaningful result, you should use technique like word2vec to get a word level input and then train a word level RNN to do this job.
+> If you want to get more meaningful results, you should use technique like word2vec to get a word level input and then train a word level RNN to do this job.

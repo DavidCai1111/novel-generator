@@ -6,7 +6,7 @@ A character level RNN to generate short novel stories
 
 ## Examples
 
-Here an example after I trained the network for about 1 hour.
+Here an example after I trained the network for about 1 hour:
 
 ```
 It rover ove itin cof tin son merk onghter onge tho sou be ptic the save 
@@ -15,4 +15,4 @@ terase an itho stare als the ceedner, heo uhe pee hithice fone
 ollikk oad sor int can orleoan.
 ```
 
-> If you want to get more meaningful result, you should should use technique like word2vec to get a word level input and train a word level RNN to do this job.
+> If you want to get more meaningful result, you should use technique like word2vec to get a word level input and then train a word level RNN to do this job.

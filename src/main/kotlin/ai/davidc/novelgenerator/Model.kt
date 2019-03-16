@@ -2,7 +2,6 @@ package ai.davidc.novelgenerator
 
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
-import org.deeplearning4j.nn.conf.BackpropType
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.dropout.Dropout
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
@@ -37,14 +36,14 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(dataSetInfo.validCharacters.length)
-                    .nOut(256)
+                    .nOut(30)
                     .dropOut(Dropout(0.2))
                     .activation(Activation.TANH)
                     .build()
             )
             .layer(1, LSTM
                     .Builder()
-                    .nOut(256)
+                    .nOut(30)
                     .dropOut(Dropout(0.2))
                     .activation(Activation.TANH)
                     .build()
@@ -55,9 +54,7 @@ class Model {
                     .nOut(dataSetInfo.validCharacters.length)
                     .build()
             )
-            .backpropType(BackpropType.TruncatedBPTT)
-            .tBPTTForwardLength(50)
-            .tBPTTBackwardLength(50)
+            .backprop(true)
             .build()
     )
 
@@ -72,11 +69,9 @@ class Model {
         logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
         logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
 
-        model.setListeners(ScoreIterationListener(5000))
+        model.setListeners(ScoreIterationListener(10))
 
         for (i in 0..epoch) {
-            logger.info("epoch: $i")
-
             model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
 
             if (i % 50 == 0) {

@@ -10,9 +10,8 @@ class NovelGeneratorApplication(val model: Model) : CommandLineRunner {
     private val logger = LogFactory.getLog(NovelGeneratorApplication::class.java)
     
     override fun run(vararg args: String?) {
-//        model-256.load()
-        model.train(5000)
-//        logger.info("Generated novel: ${model-256.generate("I", 500)}")
+        model.load()
+        logger.info("Generated novel: ${model.generate("T", 300)}")
     }
 }
 

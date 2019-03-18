@@ -17,16 +17,16 @@ data class DataSetInfo(val filePath: String) {
     var inputArray: INDArray
     var labelArray: INDArray
     var validCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\"\n',.?;()[]{}:!-_ "
+    val inputArraysLength = (dataString.length - 1) / 3
 
     init {
         inputArray = Nd4j.zeros(MAX_WORD_LENGTH, validCharacters.length)
-        labelArray = Nd4j.zeros(validCharacters.length)
+        labelArray = Nd4j.zeros(validCharacters.length, 1)
 
         logger.info("Data length: ${dataString.length}")
-        val inputArraysLength = (dataString.length - 1) / 3
 
-        inputArrays = Nd4j.zeros(inputArraysLength, MAX_WORD_LENGTH, validCharacters.length)
-        labelArrays = Nd4j.zeros(inputArraysLength, validCharacters.length, 1)
+        inputArrays = Nd4j.zeros(inputArraysLength, validCharacters.length, MAX_WORD_LENGTH)
+        labelArrays = Nd4j.zeros(inputArraysLength, validCharacters.length, MAX_WORD_LENGTH)
 
         logger.info(inputArrays.shapeInfoToString())
         logger.info(labelArrays.shapeInfoToString())
@@ -37,7 +37,7 @@ data class DataSetInfo(val filePath: String) {
             val sentence = dataString.substring(i, i + MAX_WORD_LENGTH)
 
             for (j in 0..(MAX_WORD_LENGTH - 1)) {
-                inputArrays.putScalar(intArrayOf(index, j, validCharacters.indexOf(sentence[j])), 1)
+                inputArrays.putScalar(intArrayOf(index, validCharacters.indexOf(sentence[j]), j), 1)
             }
 
             labelArrays.putScalar(intArrayOf(index, validCharacters.indexOf(dataString[i + MAX_WORD_LENGTH]), 0), 1)
@@ -45,7 +45,7 @@ data class DataSetInfo(val filePath: String) {
     }
 
     fun getSentenceToINDArray(sentence: String): INDArray {
-        val array = Nd4j.zeros(MAX_WORD_LENGTH, validCharacters.length)
+        val array = Nd4j.zeros(1, validCharacters.length, MAX_WORD_LENGTH)
 
         var length = sentence.length
 
@@ -54,7 +54,7 @@ data class DataSetInfo(val filePath: String) {
         }
 
         for (i in 0..(length - 1)) {
-            array.putScalar(intArrayOf(i, validCharacters.indexOf(sentence[i]), 0), 1)
+            array.putScalar(intArrayOf(0, validCharacters.indexOf(sentence[i]), i), 1)
         }
 
         return array
@@ -65,8 +65,8 @@ data class DataSetInfo(val filePath: String) {
         var maxPredictionIndex = -1
 
         for (i in 0..(validCharacters.length - 1)) {
-            if (maxPrediction < array.getDouble(i)) {
-                maxPrediction = array.getDouble(i)
+            if (maxPrediction < array.getDouble(0, i, 0)) {
+                maxPrediction = array.getDouble(0, i, 0)
                 maxPredictionIndex = i
             }
         }

@@ -11,7 +11,6 @@ import org.deeplearning4j.nn.weights.WeightInit
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.linalg.activations.Activation
-import org.nd4j.linalg.factory.Nd4j
 import org.nd4j.linalg.learning.config.Adam
 import org.nd4j.linalg.lossfunctions.LossFunctions
 import org.springframework.stereotype.Component
@@ -34,17 +33,18 @@ class Model {
             .list()
             .layer(0, LSTM
                     .Builder()
-                    .nIn(dataSetInfo.validCharacters.length)
-                    .nOut(256)
+                    .nIn(dataSetInfo.inputArray.length())
+                    .nOut(30)
                     .activation(Activation.TANH)
                     .build()
             )
             .layer(1, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
-                    .nOut(dataSetInfo.validCharacters.length)
+                    .nOut(dataSetInfo.labelArray.length())
                     .build()
             )
+            .pretrain(false)
             .backprop(true)
             .build()
     )
@@ -56,17 +56,13 @@ class Model {
     }
 
     fun train(epoch: Int = 1) {
-        logger.info("Valid characters: ${dataSetInfo.validCharacters}")
-        logger.info("InputArray Shape: ${dataSetInfo.inputArray.shapeInfoToString()}")
-        logger.info("LabelArray Shape: ${dataSetInfo.labelArray.shapeInfoToString()}")
-
         model.setListeners(ScoreIterationListener(10))
 
         for (i in 0..epoch) {
-            model.fit(dataSetInfo.inputArray, dataSetInfo.labelArray)
+            model.fit(dataSetInfo.inputArrays, dataSetInfo.labelArrays)
 
-            if (i % 50 == 0) {
-                logger.info(generate("A", 200))
+            if (i % 10 == 0) {
+                logger.info(generate("And", 200))
             }
         }
 
@@ -77,37 +73,19 @@ class Model {
         model = ModelSerializer.restoreMultiLayerNetwork(modelFile)
     }
 
-    fun generate(firstCharacter: String, length: Int): String {
-        var inputArray = Nd4j.zeros(dataSetInfo.validCharacters.length)
-        inputArray.putScalar(0, dataSetInfo.validCharacters.indexOf(firstCharacter))
+    fun generate(firstWord: String, length: Int): String {
+        val inputArray = dataSetInfo.getWordToINDArray(firstWord)
 
         model.rnnClearPreviousState()
 
-        var output = firstCharacter
+        val output = arrayListOf(firstWord)
 
         for (i in 0..(length - 1)) {
             val outputArray = model.rnnTimeStep(inputArray)
 
-            var maxPrediction = Double.MIN_VALUE
-            var maxPredictionIndex = -1
-
-            for (j in 0..(dataSetInfo.validCharacters.length - 1)) {
-                if (maxPrediction < outputArray.getDouble(j)) {
-                    maxPrediction = outputArray.getDouble(j)
-                    maxPredictionIndex = j
-                }
-            }
-
-            if (maxPredictionIndex == -1) {
-                logger.error("maxPredictionIndex == -1")
-            }
-
-            output += dataSetInfo.validCharacters[maxPredictionIndex]
-
-            inputArray = Nd4j.zeros(dataSetInfo.validCharacters.length)
-            inputArray.putScalar(maxPredictionIndex.toLong(), 1)
+            output.add(dataSetInfo.INDArrayToWord(outputArray))
         }
 
-        return output
+        return output.joinToString(" ")
     }
 }

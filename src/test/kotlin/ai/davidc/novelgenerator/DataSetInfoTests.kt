@@ -28,4 +28,13 @@ class DataSetInfoTests {
             Assert.assertNotEquals(i, -1)
         }
     }
+
+    @Test
+    fun testWordAndINDArrayConversion() {
+        val array = dataSetInfo.getWordToINDArray("test")
+
+        val word = dataSetInfo.INDArrayToWord(array)
+
+        Assert.assertEquals("test", word)
+    }
 }

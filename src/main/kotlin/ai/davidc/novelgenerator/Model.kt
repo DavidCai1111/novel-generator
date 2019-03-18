@@ -20,7 +20,7 @@ import java.io.File
 class Model {
     private val logger = LogFactory.getLog(Model::class.java)
 
-    val dataSetInfo = DataSetInfo("./src/main/resources/data/data.txt")
+    private val dataSetInfo = DataSetInfo("./src/main/resources/data/data.txt")
 
     private var model: MultiLayerNetwork = MultiLayerNetwork(NeuralNetConfiguration
             .Builder()
@@ -33,7 +33,7 @@ class Model {
             .list()
             .layer(0, LSTM
                     .Builder()
-                    .nIn(dataSetInfo.inputArray.length())
+                    .nIn(MAX_WORD_LENGTH)
                     .nOut(30)
                     .activation(Activation.TANH)
                     .build()
@@ -41,7 +41,7 @@ class Model {
             .layer(1, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MSE)
                     .activation(Activation.SOFTMAX)
-                    .nOut(dataSetInfo.labelArray.length())
+                    .nOut(dataSetInfo.validCharacters.length)
                     .build()
             )
             .pretrain(false)
@@ -62,7 +62,7 @@ class Model {
             model.fit(dataSetInfo.inputArrays, dataSetInfo.labelArrays)
 
             if (i % 10 == 0) {
-                logger.info(generate("And", 200))
+                logger.info(generate("We are accounted poor citizens, the city", 200))
             }
         }
 
@@ -73,19 +73,19 @@ class Model {
         model = ModelSerializer.restoreMultiLayerNetwork(modelFile)
     }
 
-    fun generate(firstWord: String, length: Int): String {
-        val inputArray = dataSetInfo.getWordToINDArray(firstWord)
+    fun generate(firstSentence: String, length: Int): String {
+        val inputArray = dataSetInfo.getSentenceToINDArray(firstSentence)
 
         model.rnnClearPreviousState()
 
-        val output = arrayListOf(firstWord)
+        var output = firstSentence
 
         for (i in 0..(length - 1)) {
             val outputArray = model.rnnTimeStep(inputArray)
 
-            output.add(dataSetInfo.indArrayToCharacter(outputArray))
+            output += dataSetInfo.indArrayToCharacter(outputArray)
         }
 
-        return output.joinToString(" ")
+        return output
     }
 }

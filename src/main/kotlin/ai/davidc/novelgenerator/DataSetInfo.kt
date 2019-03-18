@@ -9,7 +9,8 @@ import java.io.FileInputStream
 const val MAX_WORD_LENGTH = 40
 
 data class DataSetInfo(val filePath: String) {
-    private val logger = LoggerFactory.getLogger(DataSetInfo::class.java)
+    val logger = LoggerFactory.getLogger(DataSetInfo::class.java)
+
     val dataString = IOUtils.toString(FileInputStream(filePath), "UTF-8").toString().substring(0, 10000)
     val inputArrays: INDArray
     val labelArrays: INDArray
@@ -21,31 +22,39 @@ data class DataSetInfo(val filePath: String) {
         inputArray = Nd4j.zeros(MAX_WORD_LENGTH, validCharacters.length)
         labelArray = Nd4j.zeros(validCharacters.length)
 
-        val inputArraysLength = (dataString.length - 1) / MAX_WORD_LENGTH
+        logger.info("Data length: ${dataString.length}")
+        val inputArraysLength = (dataString.length - 1) / 3
 
         inputArrays = Nd4j.zeros(inputArraysLength, MAX_WORD_LENGTH, validCharacters.length)
-        labelArrays = Nd4j.zeros(inputArraysLength, validCharacters.length)
+        labelArrays = Nd4j.zeros(inputArraysLength, validCharacters.length, 1)
 
         logger.info(inputArrays.shapeInfoToString())
         logger.info(labelArrays.shapeInfoToString())
 
-        for (i in 0..(dataString.length - 1) step MAX_WORD_LENGTH) {
-            inputArrays.put(intArrayOf(i), getWordToINDArray(dataString.substring(i, i + MAX_WORD_LENGTH)))
-            labelArrays.putScalar(intArrayOf(i, validCharacters.indexOf(dataString[i + MAX_WORD_LENGTH])), 1)
+        var index = 0
+        for (i in 0..(dataString.length - MAX_WORD_LENGTH - 1) step 3) {
+            index++
+            val sentence = dataString.substring(i, i + MAX_WORD_LENGTH)
+
+            for (j in 0..(MAX_WORD_LENGTH - 1)) {
+                inputArrays.putScalar(intArrayOf(index, j, validCharacters.indexOf(sentence[j])), 1)
+            }
+
+            labelArrays.putScalar(intArrayOf(index, validCharacters.indexOf(dataString[i + MAX_WORD_LENGTH]), 0), 1)
         }
     }
 
-    fun getWordToINDArray (word: String): INDArray {
+    fun getSentenceToINDArray(sentence: String): INDArray {
         val array = Nd4j.zeros(MAX_WORD_LENGTH, validCharacters.length)
 
-        var length = word.length
+        var length = sentence.length
 
         if (length > MAX_WORD_LENGTH) {
             length = MAX_WORD_LENGTH
         }
 
         for (i in 0..(length - 1)) {
-            array.putScalar(intArrayOf(i, validCharacters.indexOf(word[i])), 1)
+            array.putScalar(intArrayOf(i, validCharacters.indexOf(sentence[i]), 0), 1)
         }
 
         return array

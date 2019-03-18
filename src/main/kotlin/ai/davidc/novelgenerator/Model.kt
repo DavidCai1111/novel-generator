@@ -83,7 +83,7 @@ class Model {
         for (i in 0..(length - 1)) {
             val outputArray = model.rnnTimeStep(inputArray)
 
-            output.add(dataSetInfo.INDArrayToWord(outputArray))
+            output.add(dataSetInfo.indArrayToCharacter(outputArray))
         }
 
         return output.joinToString(" ")

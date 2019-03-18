@@ -6,7 +6,6 @@ import org.nd4j.linalg.factory.Nd4j
 import org.slf4j.LoggerFactory
 import java.io.FileInputStream
 
-const val INPUT_WORD_LENGTH = 5
 const val MAX_WORD_LENGTH = 40
 
 data class DataSetInfo(val filePath: String) {
@@ -19,32 +18,20 @@ data class DataSetInfo(val filePath: String) {
     var validCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\"\n',.?;()[]{}:!-_ "
 
     init {
-        inputArray = Nd4j.zeros(INPUT_WORD_LENGTH, MAX_WORD_LENGTH, validCharacters.length)
-        labelArray = Nd4j.zeros(MAX_WORD_LENGTH, validCharacters.length)
+        inputArray = Nd4j.zeros(MAX_WORD_LENGTH, validCharacters.length)
+        labelArray = Nd4j.zeros(validCharacters.length)
 
-        val words = dataString.split(" ")
-        val inputArraysLength = ((words.size - INPUT_WORD_LENGTH) / INPUT_WORD_LENGTH)
+        val inputArraysLength = (dataString.length - 1) / MAX_WORD_LENGTH
 
-        inputArrays = Nd4j.zeros(inputArraysLength, INPUT_WORD_LENGTH, MAX_WORD_LENGTH, validCharacters.length)
-        labelArrays = Nd4j.zeros(inputArraysLength, MAX_WORD_LENGTH, validCharacters.length)
+        inputArrays = Nd4j.zeros(inputArraysLength, MAX_WORD_LENGTH, validCharacters.length)
+        labelArrays = Nd4j.zeros(inputArraysLength, validCharacters.length)
 
-        logger.info("Get ${words.size} words")
         logger.info(inputArrays.shapeInfoToString())
         logger.info(labelArrays.shapeInfoToString())
 
-        for (i in 0..(inputArraysLength - 1)) {
-            for (j in 0..(INPUT_WORD_LENGTH - 1)) {
-                val wordINDArray = getWordToINDArray(words[i * INPUT_WORD_LENGTH + j])
-
-                for (k in 0..(MAX_WORD_LENGTH - 1)) {
-                    inputArrays.put(intArrayOf(i, j, k), wordINDArray.getScalar(k))
-                }
-            }
-
-            for (k in 0..(MAX_WORD_LENGTH - 1)) {
-                val labelWordArray = getWordToINDArray(words[i * 5 + 5])
-                labelArrays.put(intArrayOf(i), labelWordArray.getScalar(k))
-            }
+        for (i in 0..(dataString.length - 1) step MAX_WORD_LENGTH) {
+            inputArrays.put(intArrayOf(i), getWordToINDArray(dataString.substring(i, i + MAX_WORD_LENGTH)))
+            labelArrays.putScalar(intArrayOf(i, validCharacters.indexOf(dataString[i + MAX_WORD_LENGTH])), 1)
         }
     }
 
@@ -64,39 +51,17 @@ data class DataSetInfo(val filePath: String) {
         return array
     }
 
-    fun INDArrayToWord(array: INDArray): String {
-        var word = ""
+    fun indArrayToCharacter(array: INDArray): String {
+        var maxPrediction = Double.MIN_VALUE
+        var maxPredictionIndex = -1
 
-        for (i in 0..(MAX_WORD_LENGTH - 1)) {
-            var maxPrediction = Double.MIN_VALUE
-            var maxPredictionIndex = -1
-
-            for (j in 0..(validCharacters.length - 1)) {
-                if (maxPrediction < array.getDouble(i, j)) {
-                    maxPrediction = array.getDouble(i, j)
-                    maxPredictionIndex = j
-                }
-            }
-
-            if (isLastCharacter(array, i)) {
-                return word
-            }
-
-            word += validCharacters[maxPredictionIndex]
-        }
-
-        return word
-    }
-
-    private fun isLastCharacter (wordINDArray: INDArray, index: Int): Boolean {
-        for (i in index..(MAX_WORD_LENGTH - 1)) {
-            for (j in 0..(validCharacters.length - 1)) {
-                if (wordINDArray.getDouble(i, j) != 0.toDouble()) {
-                    return false
-                }
+        for (i in 0..(validCharacters.length - 1)) {
+            if (maxPrediction < array.getDouble(i)) {
+                maxPrediction = array.getDouble(i)
+                maxPredictionIndex = i
             }
         }
 
-        return true
+        return validCharacters[maxPredictionIndex].toString()
     }
 }

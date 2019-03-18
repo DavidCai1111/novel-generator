@@ -31,10 +31,10 @@ class DataSetInfoTests {
 
     @Test
     fun testWordAndINDArrayConversion() {
-        val array = dataSetInfo.getWordToINDArray("test")
+        val array = dataSetInfo.getWordToINDArray("t")
 
-        val word = dataSetInfo.INDArrayToWord(array)
+        val character = dataSetInfo.indArrayToCharacter(array)
 
-        Assert.assertEquals("test", word)
+        Assert.assertEquals("t", character)
     }
 }

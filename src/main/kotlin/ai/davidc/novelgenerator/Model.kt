@@ -2,6 +2,7 @@ package ai.davidc.novelgenerator
 
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.BackpropType
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
@@ -35,24 +36,19 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(dataSetInfo.validCharacters.length)
-                    .nOut(128)
+                    .nOut(256)
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, LSTM
-                    .Builder()
-                    .nOut(128)
-                    .activation(Activation.TANH)
-                    .build()
-            )
-            .layer(2, RnnOutputLayer
+            .layer(1, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MCXENT)
                     .activation(Activation.SOFTMAX)
                     .nOut(dataSetInfo.validCharacters.length)
                     .build()
             )
-            .pretrain(false)
-            .backprop(true)
+            .backpropType(BackpropType.TruncatedBPTT)
+            .tBPTTForwardLength(50)
+            .tBPTTBackwardLength(50)
             .build()
     )
 

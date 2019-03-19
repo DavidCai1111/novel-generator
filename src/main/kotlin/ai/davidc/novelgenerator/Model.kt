@@ -2,6 +2,7 @@ package ai.davidc.novelgenerator
 
 import org.apache.commons.logging.LogFactory
 import org.deeplearning4j.nn.api.OptimizationAlgorithm
+import org.deeplearning4j.nn.conf.BackpropType
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration
 import org.deeplearning4j.nn.conf.Updater
 import org.deeplearning4j.nn.conf.layers.ConvolutionLayer
@@ -51,8 +52,9 @@ class Model {
                     .nOut(dataSetInfo.validCharacters.length)
                     .build()
             )
-            .pretrain(false)
-            .backprop(true)
+            .backpropType(BackpropType.TruncatedBPTT)
+            .tBPTTForwardLength(50)
+            .tBPTTBackwardLength(50)
             .build()
     )
 

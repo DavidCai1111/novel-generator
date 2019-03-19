@@ -36,17 +36,11 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(dataSetInfo.validCharacters.length)
-                    .nOut(128)
+                    .nOut(256)
                     .activation(Activation.TANH)
                     .build()
             )
-            .layer(1, LSTM
-                    .Builder()
-                    .nOut(128)
-                    .activation(Activation.TANH)
-                    .build()
-            )
-            .layer(2, RnnOutputLayer
+            .layer(1, RnnOutputLayer
                     .Builder(LossFunctions.LossFunction.MCXENT)
                     .activation(Activation.SOFTMAX)
                     .nOut(dataSetInfo.validCharacters.length)

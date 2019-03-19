@@ -9,24 +9,25 @@ import java.io.FileInputStream
 const val MAX_WORD_LENGTH = 40
 
 data class DataSetInfo(val filePath: String) {
-    val logger = LoggerFactory.getLogger(DataSetInfo::class.java)
-
     val dataString = IOUtils.toString(FileInputStream(filePath), "UTF-8").toString().substring(0, 10000)
     val inputArrays: INDArray
     val labelArrays: INDArray
-    var inputArray: INDArray
-    var labelArray: INDArray
+    var paddingArray: INDArray
     var validCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\"\n',.?;()[]{}:!-_ "
-    val inputArraysLength = (dataString.length - 1) / 3
+    private val inputArraysLength = (dataString.length - 1) / 3
+
+    private val logger = LoggerFactory.getLogger(DataSetInfo::class.java)
 
     init {
-        inputArray = Nd4j.zeros(MAX_WORD_LENGTH, validCharacters.length)
-        labelArray = Nd4j.zeros(validCharacters.length, 1)
-
         logger.info("Data length: ${dataString.length}")
 
         inputArrays = Nd4j.zeros(inputArraysLength, validCharacters.length, MAX_WORD_LENGTH)
         labelArrays = Nd4j.zeros(inputArraysLength, validCharacters.length, MAX_WORD_LENGTH)
+        paddingArray = Nd4j.zeros(inputArraysLength, MAX_WORD_LENGTH)
+
+        for (i in 0..(inputArraysLength - 1)) {
+            paddingArray.putScalar(intArrayOf(i, MAX_WORD_LENGTH - 1), 1)
+        }
 
         logger.info(inputArrays.shapeInfoToString())
         logger.info(labelArrays.shapeInfoToString())
@@ -38,9 +39,8 @@ data class DataSetInfo(val filePath: String) {
 
             for (j in 0..(MAX_WORD_LENGTH - 1)) {
                 inputArrays.putScalar(intArrayOf(index, validCharacters.indexOf(sentence[j]), j), 1)
+                labelArrays.putScalar(intArrayOf(index, validCharacters.indexOf(dataString[i + MAX_WORD_LENGTH]), j), 1)
             }
-
-            labelArrays.putScalar(intArrayOf(index, validCharacters.indexOf(dataString[i + MAX_WORD_LENGTH]), 0), 1)
         }
     }
 

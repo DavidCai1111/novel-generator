@@ -35,7 +35,7 @@ class Model {
             .layer(0, LSTM
                     .Builder()
                     .nIn(dataSetInfo.validCharacters.length)
-                    .nOut(128)
+                    .nOut(30)
                     .activation(Activation.TANH)
                     .build()
             )
@@ -60,10 +60,10 @@ class Model {
         model.setListeners(ScoreIterationListener(10))
 
         for (i in 0..epoch) {
-            model.fit(dataSetInfo.inputArrays, dataSetInfo.labelArrays)
+            model.fit(dataSetInfo.inputArrays, dataSetInfo.labelArrays, null, dataSetInfo.paddingArray)
 
             if (i != 0 && i % 10 == 0) {
-                logger.info(generate("We are accounted poor citizens, the city", 200))
+                logger.info(generate("We are accounted poor citizens, the city", 400))
             }
         }
 

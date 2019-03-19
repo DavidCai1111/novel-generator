@@ -3,6 +3,7 @@ package ai.davidc.novelgenerator
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.nd4j.linalg.factory.Nd4j
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit4.SpringRunner
 
@@ -27,5 +28,15 @@ class DataSetInfoTests {
         for (i in indexes) {
             Assert.assertNotEquals(i, -1)
         }
+    }
+
+    @Test
+    fun testWordAndINDArrayConversion() {
+        val array = Nd4j.zeros(1, dataSetInfo.validCharacters.length)
+        array.putScalar(intArrayOf(0, 0), 1)
+
+        val character = dataSetInfo.indArrayToCharacter(array)
+
+        Assert.assertEquals("A", character)
     }
 }
